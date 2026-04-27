@@ -324,8 +324,16 @@
     const modalBackdrop = document.getElementById('modalBackdrop');
 
     function formatAnswer(value) {
-      if (Number.isInteger(value)) return value.toString();
-      return Number(value.toFixed(6)).toString();
+      // Round to nearest hundredth
+      const rounded = Math.round(value * 100) / 100;
+
+      // Check if rounding changed the value
+      const isExact = Math.abs(value - rounded) < 1e-10;
+
+      // Format to 2 decimal places (remove trailing zeros if integer)
+      const formatted = Number(rounded.toFixed(2)).toString();
+
+      return isExact ? formatted : `~${formatted}`;
     }
 
     function calculateLog() {
@@ -355,7 +363,7 @@
 
       const result = Math.log(argument) / Math.log(base);
       answer.textContent = formatAnswer(result);
-      // message.textContent = `${base} raised to this answer equals ${argument}.`;
+      message.textContent = '';
     }
 
     calculateButton.addEventListener('click', calculateLog);
