@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log Calculator</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --accent: #2563eb;
+      --accent-dark: #1d4ed8;
+      --error: #dc2626;
+      --shadow: 0 24px 70px rgba(15, 23, 42, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #eaf1ff 0%, var(--bg) 45%, #fff 100%);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .app {
+      width: min(100%, 780px);
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(209, 213, 219, 0.8);
+      border-radius: 32px;
+      box-shadow: var(--shadow);
+      padding: clamp(22px, 5vw, 50px);
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 34px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      letter-spacing: -0.04em;
+    }
+
+    .help-button {
+      width: 48px;
+      height: 48px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--accent);
+      font-size: 1.5rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .help-button:hover,
+    .help-button:focus {
+      background: #eff6ff;
+      transform: translateY(-2px);
+      outline: none;
+    }
+
+    .calculator {
+      display: grid;
+      justify-items: center;
+      gap: 28px;
+    }
+
+    .expression-scroll {
+      width: 100%;
+      overflow-x: auto;
+      padding: 12px 0 18px;
+    }
+
+    .expression {
+      min-width: max-content;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(10px, 2vw, 20px);
+    }
+
+    .log-piece {
+      display: flex;
+      align-items: flex-end;
+      padding-bottom: 22px;
+    }
+
+    .log-text {
+      font-size: clamp(3.8rem, 12vw, 7rem);
+      line-height: 0.85;
+      font-weight: 500;
+      letter-spacing: -0.075em;
+    }
+
+    input {
+      border: 3px solid #111827;
+      border-radius: 6px;
+      background: white;
+      color: var(--text);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      outline: 5px solid rgba(37, 99, 235, 0.14);
+    }
+
+    .base-input {
+      width: clamp(56px, 14vw, 84px);
+      height: clamp(38px, 8vw, 54px);
+      margin-left: clamp(6px, 1vw, 12px);
+      margin-bottom: -22px;
+      font-size: clamp(1.2rem, 4vw, 1.8rem);
+    }
+
+    .argument-input {
+      width: clamp(92px, 22vw, 142px);
+      height: clamp(58px, 10vw, 82px);
+      align-self: flex-start;
+      font-size: clamp(1.6rem, 5vw, 2.5rem);
+    }
+
+    .equals {
+      font-size: clamp(3.8rem, 11vw, 6.5rem);
+      line-height: 1;
+      font-weight: 500;
+    }
+
+    .answer {
+      min-width: clamp(92px, 22vw, 150px);
+      min-height: clamp(58px, 10vw, 82px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 14px;
+      border-radius: 14px;
+      background: #f3f4f6;
+      color: var(--accent-dark);
+      font-size: clamp(1.7rem, 5vw, 2.8rem);
+      font-weight: 800;
+    }
+
+    .calculate-button {
+      border: none;
+      border-radius: 18px;
+      background: var(--accent);
+      color: white;
+      font-size: clamp(1.25rem, 4vw, 2rem);
+      font-weight: 800;
+      padding: 18px 42px;
+      cursor: pointer;
+      box-shadow: 0 16px 30px rgba(37, 99, 235, 0.25);
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .calculate-button:hover,
+    .calculate-button:focus {
+      background: var(--accent-dark);
+      transform: translateY(-2px);
+      outline: none;
+    }
+
+    .message {
+      min-height: 28px;
+      text-align: center;
+      color: var(--muted);
+      font-size: clamp(1rem, 2.5vw, 1.15rem);
+    }
+
+    .message.error {
+      color: var(--error);
+      font-weight: 800;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.48);
+      z-index: 10;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      width: min(100%, 560px);
+      background: white;
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+
+    .modal h2 {
+      margin: 0;
+      font-size: 1.7rem;
+    }
+
+    .close-button {
+      width: 42px;
+      height: 42px;
+      border: none;
+      border-radius: 999px;
+      background: #f3f4f6;
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+
+    .modal p,
+    .modal li {
+      color: #374151;
+      font-size: 1.05rem;
+      line-height: 1.55;
+    }
+
+    .example-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      font-weight: 800;
+      text-align: center;
+      font-size: 1.15rem;
+    }
+
+    @media (max-width: 540px) {
+      body {
+        align-items: flex-start;
+        padding: 14px;
+      }
+
+      .app {
+        margin-top: 18px;
+        border-radius: 24px;
+      }
+
+      .expression {
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="top-bar">
+      <h1>Log Calculator</h1>
+      <button class="help-button" id="helpButton" aria-label="Open help">?</button>
+    </div>
+
+    <section class="calculator">
+      <div class="expression-scroll">
+        <div class="expression">
+          <div class="log-piece">
+            <span class="log-text">Log</span>
+            <input class="base-input" id="base" type="number" inputmode="decimal" step="any" aria-label="Base" />
+          </div>
+
+          <input class="argument-input" id="argument" type="number" inputmode="decimal" step="any" aria-label="Log number" />
+
+          <span class="equals">=</span>
+          <div class="answer" id="answer" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <button class="calculate-button" id="calculateButton">Calculate</button>
+      <div class="message" id="message">Enter the base and the number, then press Calculate.</div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="helpTitle">How to Use This</h2>
+        <button class="close-button" id="closeButton" aria-label="Close help">×</button>
+      </div>
+
+      <p>A logarithm asks: <strong>What exponent do I need?</strong></p>
+      <div class="example-box">log<sub>b</sub>(x) = answer means b<sup>answer</sup> = x</div>
+      <ul>
+        <li>The small lower box is the <strong>base</strong>.</li>
+        <li>The larger upper box is the <strong>number inside the logarithm</strong>.</li>
+        <li>The answer appears after the equals sign.</li>
+      </ul>
+      <div class="example-box">Example: log<sub>2</sub>(8) = 3 because 2<sup>3</sup> = 8</div>
+    </div>
+  </div>
+
+  <script>
+    const baseInput = document.getElementById('base');
+    const argumentInput = document.getElementById('argument');
+    const answer = document.getElementById('answer');
+    const message = document.getElementById('message');
+    const calculateButton = document.getElementById('calculateButton');
+    const helpButton = document.getElementById('helpButton');
+    const closeButton = document.getElementById('closeButton');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+
+    function formatAnswer(value) {
+      if (Number.isInteger(value)) return value.toString();
+      return Number(value.toFixed(6)).toString();
+    }
+
+    function calculateLog() {
+      const base = Number(baseInput.value);
+      const argument = Number(argumentInput.value);
+
+      message.classList.remove('error');
+      answer.textContent = '';
+
+      if (!baseInput.value || !argumentInput.value) {
+        message.textContent = 'Please fill in both boxes.';
+        message.classList.add('error');
+        return;
+      }
+
+      if (base <= 0 || base === 1) {
+        message.textContent = 'The base must be positive and cannot be 1.';
+        message.classList.add('error');
+        return;
+      }
+
+      if (argument <= 0) {
+        message.textContent = 'The number inside the logarithm must be positive.';
+        message.classList.add('error');
+        return;
+      }
+
+      const result = Math.log(argument) / Math.log(base);
+      answer.textContent = formatAnswer(result);
+      message.textContent = `${base} raised to this answer equals ${argument}.`;
+    }
+
+    calculateButton.addEventListener('click', calculateLog);
+
+    [baseInput, argumentInput].forEach(input => {
+      input.addEventListener('keydown', event => {
+        if (event.key === 'Enter') calculateLog();
+      });
+    });
+
+    helpButton.addEventListener('click', () => modalBackdrop.classList.add('open'));
+    closeButton.addEventListener('click', () => modalBackdrop.classList.remove('open'));
+    modalBackdrop.addEventListener('click', event => {
+      if (event.target === modalBackdrop) modalBackdrop.classList.remove('open');
+    });
+  </script>
+</body>
+</html>
